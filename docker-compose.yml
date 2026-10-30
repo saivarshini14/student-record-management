@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  student-record-system:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: student-record-management
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - SPRING_PROFILES_ACTIVE=prod
+    volumes:
+      # Persist H2 database data across container restarts
+      - student-data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/students/stats || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 25s
+
+volumes:
+  student-data:
+    name: student_record_db_data

@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: student-record-management
+    env: docker
+    dockerfilePath: Dockerfile
+    plan: free
+    region: oregon
+    branch: main
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+    disk:
+      name: student-h2-data
+      mountPath: /app/data
+      sizeGB: 1
