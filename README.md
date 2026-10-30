@@ -1,6 +1,6 @@
 # Student Record Management System 🎓
 
-A modern full-stack web application designed for trainers, professors, and college administration staff to manage student academic records, marks, and branch details seamlessly in one centralized place instead of error-prone manual spreadsheets.
+A modern full-stack web application designed for trainers, professors, and college administration staff to maintain basic student details, marks, and branch allocations in one centralized place instead of error-prone manual spreadsheets.
 
 ---
 
@@ -11,6 +11,7 @@ A modern full-stack web application designed for trainers, professors, and colle
 | **Frontend** | **React.js 18** (Vite build) | Component-driven architecture, custom responsive CSS design, live form validation, toast notifications |
 | **Backend** | **Java Spring Boot REST API** (Java 17, Spring Boot 4/3) | Layered architecture (Controller, Service, Repository), Jakarta Bean Validation, Global Exception Handling |
 | **Data Storage** | **H2 Database Engine** | Persistent file-based embedded SQL database (`./data/studentdb`), H2 Web Console |
+| **Container & CI/CD** | **Docker & GitHub Actions** | Multi-stage Dockerfile, Docker Compose, automated CI test & packaging workflow |
 | **Build Tools** | **Maven** & **npm** | Automated build, JUnit 5 integration tests, production-optimized Vite bundle |
 
 ---
@@ -51,6 +52,9 @@ A modern full-stack web application designed for trainers, professors, and colle
 
 ```text
 student-record-management/
+├── .github/
+│   └── workflows/
+│       └── ci-deploy.yml          # GitHub Actions CI/CD workflow
 ├── backend/
 │   ├── pom.xml
 │   ├── src/
@@ -58,7 +62,8 @@ student-record-management/
 │   │   │   ├── java/com/example/studentmanagement/
 │   │   │   │   ├── StudentManagementApplication.java
 │   │   │   │   ├── controller/
-│   │   │   │   │   └── StudentController.java
+│   │   │   │   │   ├── StudentController.java
+│   │   │   │   │   └── SpaWebController.java
 │   │   │   │   ├── dto/
 │   │   │   │   │   ├── ApiResponse.java
 │   │   │   │   │   ├── StudentRequestDto.java
@@ -80,7 +85,8 @@ student-record-management/
 │   │   │   │       ├── CorsConfig.java
 │   │   │   │       └── DataSeeder.java
 │   │   │   └── resources/
-│   │   │       └── application.properties
+│   │   │       ├── application.properties
+│   │   │       └── static/        # Production bundle of React frontend
 │   │   └── test/
 │   │       └── java/com/example/studentmanagement/
 │   │           └── StudentServiceTest.java
@@ -103,15 +109,21 @@ student-record-management/
 │           ├── StudentFormModal.jsx
 │           ├── DeleteConfirmModal.jsx
 │           └── NotificationToast.jsx
-├── start-all.bat
-├── start-backend.bat
-├── start-frontend.bat
+├── Dockerfile                     # Multi-stage Docker production image
+├── docker-compose.yml             # Local / VM container orchestration
+├── render.yaml                    # 1-Click Render.com Blueprint configuration
+├── railway.json                   # Railway.app configuration
+├── build-production.bat           # Automated local production build script
+├── start-all.bat                  # One-click dual launcher
+├── start-backend.bat              # Backend launcher
+├── start-frontend.bat             # Frontend launcher
+├── .gitignore
 └── README.md
 ```
 
 ---
 
-## 🏃 Quick Start Guide
+## 🏃 Quick Start Guide (Local Development)
 
 ### Option 1: One-Click Startup (Windows)
 Double-click `start-all.bat` in the project root:
@@ -138,6 +150,63 @@ npm install
 npm run dev
 ```
 *Frontend URL:* `http://localhost:5173`
+
+---
+
+## 🚢 Deployment Guide
+
+### 1. Push to GitHub
+Initialize remote and push your code to GitHub:
+```bash
+git remote add origin https://github.com/<your-username>/student-record-management.git
+git branch -M main
+git push -u origin main
+```
+*The included GitHub Actions workflow (`.github/workflows/ci-deploy.yml`) will automatically trigger, run unit tests, and build the deployable JAR.*
+
+---
+
+### 2. Deploy to Render (Recommended Free/Low-Cost Cloud)
+1. Go to [render.com](https://render.com) and create an account.
+2. Click **New +** → **Blueprint**.
+3. Select your GitHub repository. Render will automatically read `render.yaml`.
+4. Render builds the multi-stage `Dockerfile` and attaches 1GB persistent disk for the H2 database.
+5. Your application is live at `https://student-record-management.onrender.com`!
+
+---
+
+### 3. Deploy to Railway
+1. Go to [railway.app](https://railway.app) and sign in with GitHub.
+2. Click **New Project** → **Deploy from GitHub repo**.
+3. Select this repository.
+4. Railway detects `Dockerfile` and `railway.json` and deploys automatically.
+5. In project settings, click **Generate Domain** to get a public URL.
+
+---
+
+### 4. Deploy via Docker (Self-Hosted / Cloud VM / VPS)
+Run the entire full-stack application with a single command:
+```bash
+docker compose up -d --build
+```
+- Open `http://<your-server-ip>:8080` to access the application.
+- All student data is persisted in the Docker volume `student_record_db_data`.
+
+---
+
+### 5. Local Standalone Production JAR
+To build a single all-in-one executable JAR:
+```cmd
+build-production.bat
+```
+Or manually:
+```bash
+cd frontend && npm run build
+cp -r dist/* ../backend/src/main/resources/static/
+cd ../backend && mvn clean package -DskipTests
+java -jar target/student-record-management-1.0.0.jar
+```
+Open `http://localhost:8080` to access the full-stack system on a single port.
 
 ---
 
@@ -174,20 +243,3 @@ npm run dev
   "timestamp": "2026-10-30T23:27:30.556"
 }
 ```
-
----
-
-## 🧪 Automated Testing
-
-To run the JUnit 5 integration test suite:
-```powershell
-cd backend
-mvn test
-```
-*Verified test scenarios:*
-- Student registration and automatic grade/pass assignment
-- Duplicate roll number rejection
-- Roll number search matching
-- Student update and rollback constraints
-- Student deletion
-- Analytics and stats calculation
